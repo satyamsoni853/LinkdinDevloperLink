@@ -67,56 +67,29 @@ function CallbackContent() {
       }
 
       // ──────────────────────────────────────────────────────
-      // STEP 2: Fetch user details DIRECTLY from LinkedIn API
-      // using JavaScript (frontend) — as per assignment
+      // STEP 2: Send access token to backend to fetch profile
+      // from LinkedIn (server-side) and save to database.
+      // This avoids CORS issues with LinkedIn's API.
       // ──────────────────────────────────────────────────────
       setStatus("Fetching your LinkedIn profile...");
       const profileResponse = await fetch(
-        "https://api.linkedin.com/v2/userinfo",
+        "https://developerlinkdin2-7.onrender.com/api/auth/linkedin/userinfo",
         {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ access_token: accessToken }),
         },
       );
 
       if (!profileResponse.ok) {
-        throw new Error("Failed to fetch user profile from LinkedIn");
+        const errorData = await profileResponse.json();
+        throw new Error(errorData.error || "Failed to fetch profile");
       }
 
-      const profile = await profileResponse.json();
-
-      // Extract required fields
-      const userData = {
-        firstName: profile.given_name || "",
-        lastName: profile.family_name || "",
-        email: profile.email || "",
-        profilePicture: profile.picture || "",
-        linkedinId: profile.sub || "",
-      };
+      const savedUser = await profileResponse.json();
 
       // ──────────────────────────────────────────────────────
-      // STEP 3: Send user details to Spring Boot backend
-      // Backend processes/stores and returns proper response
-      // ──────────────────────────────────────────────────────
-      setStatus("Saving your profile...");
-      const saveResponse = await fetch(
-        "https://developerlinkdin2-7.onrender.com/api/auth/linkedin/save-user",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(userData),
-        },
-      );
-
-      if (!saveResponse.ok) {
-        throw new Error("Failed to save user data to backend");
-      }
-
-      const savedUser = await saveResponse.json();
-
-      // ──────────────────────────────────────────────────────
-      // STEP 4: Store in Redux and redirect to profile
+      // STEP 3: Store in Redux and redirect to profile
       // ──────────────────────────────────────────────────────
       dispatch(
         setUser({
