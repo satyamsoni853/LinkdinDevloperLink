@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, Suspense } from "react";
+import { useEffect, useState, Suspense, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useDispatch } from "react-redux";
 import { setUser } from "@/redux/slices/userSlice";
@@ -12,190 +12,133 @@ function CallbackContent() {
   const [status, setStatus] = useState("Authenticating...");
   const [error, setError] = useState<string | null>(null);
 
+  const handleOAuthFlow = useCallback(
+    async (code: string) => {
+      try {
+        setStatus("Exchanging authorization code...");
+        const tokenResponse = await fetch(
+          "https://developerlinkdin2-7.onrender.com/api/auth/linkedin/token",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ code }),
+          },
+        );
+
+        if (!tokenResponse.ok) {
+          const errorData = await tokenResponse.json();
+          throw new Error(
+            errorData.error || "Failed to exchange authorization code",
+          );
+        }
+
+        const tokenData = await tokenResponse.json();
+        const accessToken = tokenData.access_token;
+
+        if (!accessToken) {
+          throw new Error("No access token returned from server");
+        }
+
+        setStatus("Fetching your LinkedIn profile...");
+        const profileResponse = await fetch(
+          "https://developerlinkdin2-7.onrender.com/api/auth/linkedin/userinfo",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ access_token: accessToken }),
+          },
+        );
+
+        if (!profileResponse.ok) {
+          const errorData = await profileResponse.json();
+          throw new Error(errorData.error || "Failed to fetch profile");
+        }
+
+        const savedUser = await profileResponse.json();
+
+        dispatch(
+          setUser({
+            firstName: savedUser.firstName,
+            lastName: savedUser.lastName,
+            email: savedUser.email,
+            profilePicture: savedUser.profilePicture,
+            linkedinId: savedUser.linkedinId,
+          }),
+        );
+
+        setStatus("Success! Redirecting to your profile...");
+        setTimeout(() => {
+          router.push("/profile");
+        }, 1500);
+      } catch (err: any) {
+        console.error("OAuth Error:", err);
+        setError(
+          err.message || "An unexpected error occurred during authentication.",
+        );
+      }
+    },
+    [dispatch, router],
+  );
+
   useEffect(() => {
     const code = searchParams.get("code");
     const state = searchParams.get("state");
     const storedState = localStorage.getItem("linkedin_oauth_state");
 
-    // Validate the authorization code exists
     if (!code) {
       setError("No authorization code received from LinkedIn.");
       return;
     }
 
-    // CSRF protection: validate state parameter
     if (state !== storedState) {
       setError("Invalid state parameter. Possible CSRF attack.");
       return;
     }
 
-    // Clean up stored state
     localStorage.removeItem("linkedin_oauth_state");
 
-    // Start the OAuth flow
     handleOAuthFlow(code);
-  }, [searchParams]);
-
-  const handleOAuthFlow = async (code: string) => {
-    try {
-      // ──────────────────────────────────────────────────────
-      // STEP 1: Send code to backend → get access_token back
-      // (client_secret stays secure on the backend)
-      // ──────────────────────────────────────────────────────
-      setStatus("Exchanging authorization code...");
-      const tokenResponse = await fetch(
-        "https://developerlinkdin2-7.onrender.com/api/auth/linkedin/token",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ code }),
-        },
-      );
-
-      if (!tokenResponse.ok) {
-        const errorData = await tokenResponse.json();
-        throw new Error(
-          errorData.error || "Failed to exchange authorization code",
-        );
-      }
-
-      const tokenData = await tokenResponse.json();
-      const accessToken = tokenData.access_token;
-
-      if (!accessToken) {
-        throw new Error("No access token returned from server");
-      }
-
-      // ──────────────────────────────────────────────────────
-      // STEP 2: Send access token to backend to fetch profile
-      // from LinkedIn (server-side) and save to database.
-      // This avoids CORS issues with LinkedIn's API.
-      // ──────────────────────────────────────────────────────
-      setStatus("Fetching your LinkedIn profile...");
-      const profileResponse = await fetch(
-        "https://developerlinkdin2-7.onrender.com/api/auth/linkedin/userinfo",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ access_token: accessToken }),
-        },
-      );
-
-      if (!profileResponse.ok) {
-        const errorData = await profileResponse.json();
-        throw new Error(errorData.error || "Failed to fetch profile");
-      }
-
-      const savedUser = await profileResponse.json();
-
-      // ──────────────────────────────────────────────────────
-      // STEP 3: Store in Redux and redirect to profile
-      // ──────────────────────────────────────────────────────
-      dispatch(
-        setUser({
-          firstName: savedUser.firstName,
-          lastName: savedUser.lastName,
-          email: savedUser.email,
-          profilePicture: savedUser.profilePicture,
-          linkedinId: savedUser.linkedinId,
-        }),
-      );
-
-      setStatus("Success! Redirecting to your profile...");
-      setTimeout(() => {
-        router.push("/profile");
-      }, 1500);
-    } catch (err: any) {
-      console.error("OAuth Error:", err);
-      setError(
-        err.message || "An unexpected error occurred during authentication.",
-      );
-    }
-  };
+  }, [searchParams, handleOAuthFlow]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-950 text-white font-sans">
-      <div className="max-w-md w-full p-8 rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl text-center">
+    <div className="min-h-screen flex items-center justify-center bg-[#f3f2ef] text-gray-900 font-sans p-6">
+      <div className="max-w-md w-full p-8 rounded-lg bg-white shadow-[0_4px_12px_rgba(0,0,0,0.08)] text-center">
         {!error ? (
-          <>
-            <div className="mb-6 relative">
-              <div className="w-16 h-16 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin mx-auto"></div>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-8 h-8 bg-blue-500 rounded-full animate-pulse blur-sm opacity-50"></div>
-              </div>
-            </div>
-            <h1 className="text-2xl font-bold tracking-tight text-slate-100">
-              {status}
-            </h1>
-            <p className="mt-3 text-slate-400">
+          <div className="py-6">
+            <div className="w-12 h-12 border-4 border-[#eff3f8] border-t-[#0a66c2] rounded-full animate-spin mx-auto mb-6"></div>
+            <h1 className="text-xl font-bold mb-2 text-gray-900">{status}</h1>
+            <p className="text-gray-500 text-sm">
               Please wait while we establish a secure connection with LinkedIn.
             </p>
-            {/* Progress Steps */}
-            <div className="mt-8 space-y-3 text-left">
-              <div
-                className={`flex items-center gap-3 text-sm ${status.includes("Exchanging") ? "text-blue-400" : status.includes("Fetching") || status.includes("Saving") || status.includes("Success") ? "text-green-400" : "text-slate-600"}`}
-              >
-                <div
-                  className={`w-2 h-2 rounded-full ${status.includes("Exchanging") ? "bg-blue-400 animate-pulse" : status.includes("Fetching") || status.includes("Saving") || status.includes("Success") ? "bg-green-400" : "bg-slate-700"}`}
-                ></div>
-                Exchange authorization code
-              </div>
-              <div
-                className={`flex items-center gap-3 text-sm ${status.includes("Fetching") ? "text-blue-400" : status.includes("Saving") || status.includes("Success") ? "text-green-400" : "text-slate-600"}`}
-              >
-                <div
-                  className={`w-2 h-2 rounded-full ${status.includes("Fetching") ? "bg-blue-400 animate-pulse" : status.includes("Saving") || status.includes("Success") ? "bg-green-400" : "bg-slate-700"}`}
-                ></div>
-                Fetch profile from LinkedIn API
-              </div>
-              <div
-                className={`flex items-center gap-3 text-sm ${status.includes("Saving") ? "text-blue-400" : status.includes("Success") ? "text-green-400" : "text-slate-600"}`}
-              >
-                <div
-                  className={`w-2 h-2 rounded-full ${status.includes("Saving") ? "bg-blue-400 animate-pulse" : status.includes("Success") ? "bg-green-400" : "bg-slate-700"}`}
-                ></div>
-                Save to backend
-              </div>
-              <div
-                className={`flex items-center gap-3 text-sm ${status.includes("Success") ? "text-green-400" : "text-slate-600"}`}
-              >
-                <div
-                  className={`w-2 h-2 rounded-full ${status.includes("Success") ? "bg-green-400 animate-pulse" : "bg-slate-700"}`}
-                ></div>
-                Redirect to profile
-              </div>
-            </div>
-          </>
+          </div>
         ) : (
-          <>
-            <div className="mb-6 flex items-center justify-center">
-              <div className="w-16 h-16 bg-red-500/10 border border-red-500/50 rounded-full flex items-center justify-center">
-                <svg
-                  className="w-8 h-8 text-red-500"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </div>
+          <div className="py-6">
+            <div className="w-12 h-12 bg-red-50 text-red-600 rounded-full flex items-center justify-center mx-auto mb-6">
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
             </div>
-            <h1 className="text-2xl font-bold tracking-tight text-red-500">
+            <h1 className="text-xl font-bold text-gray-900 mb-2">
               Authentication Failed
             </h1>
-            <p className="mt-3 text-slate-400">{error}</p>
+            <p className="text-gray-600 text-sm mb-6">{error}</p>
             <button
               onClick={() => router.push("/login")}
-              className="mt-8 px-6 py-3 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl transition-all duration-200 font-medium"
+              className="px-6 py-2 bg-[#0a66c2] text-white font-medium rounded-full hover:bg-[#004182] transition-colors"
             >
               Try Again
             </button>
-          </>
+          </div>
         )}
       </div>
     </div>
@@ -206,7 +149,7 @@ export default function AuthCallback() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen flex items-center justify-center bg-slate-950 text-white">
+        <div className="min-h-screen flex items-center justify-center bg-[#f3f2ef] text-gray-900 font-sans">
           Loading...
         </div>
       }

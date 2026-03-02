@@ -6,9 +6,9 @@ import { RootState } from "@/redux/store";
 import { logout } from "@/redux/slices/userSlice";
 import { useRouter } from "next/navigation";
 import {
-  FaLinkedinIn,
-  FaEnvelope,
+  FaLinkedin,
   FaSignOutAlt,
+  FaEnvelope,
   FaIdBadge,
 } from "react-icons/fa";
 import Image from "next/image";
@@ -32,100 +32,106 @@ export default function ProfilePage() {
   if (!user.isLoggedIn) return null;
 
   return (
-    <div className="min-h-screen bg-slate-100 flex items-center justify-center p-4 sm:p-8 font-sans">
-      <div className="w-full max-w-4xl bg-white rounded-[32px] shadow-2xl overflow-hidden flex flex-col md:flex-row border border-slate-200">
-        {/* Left Aspect - Visuals */}
-        <div className="md:w-2/5 relative bg-slate-900 overflow-hidden">
-          <div className="absolute inset-0 opacity-40">
-            <Image
-              src="/profile_banner.png"
-              alt="Background"
-              fill
-              className="object-cover"
-              unoptimized
-            />
+    <div className="min-h-screen bg-[#f3f2ef] font-sans">
+      {/* Header */}
+      <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-[#0a66c2] rounded flex flex-col items-center justify-center">
+              <FaLinkedin className="text-white text-lg" />
+            </div>
+            <span className="font-bold text-xl tracking-tight text-gray-900">
+              AuthNode
+            </span>
           </div>
-          <div className="relative z-10 h-full flex flex-col items-center justify-center p-12 text-center text-white">
-            <div className="relative mb-8 transform transition-transform hover:scale-105 duration-500">
-              <div className="absolute inset-0 bg-blue-500 rounded-full blur-2xl opacity-30 animate-pulse"></div>
-              <div className="relative w-48 h-48 rounded-full border-4 border-white/50 overflow-hidden shadow-2xl p-1 bg-white/20 backdrop-blur-sm">
+          <button
+            onClick={handleLogout}
+            className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors flex items-center gap-2"
+          >
+            <FaSignOutAlt />
+            Sign out
+          </button>
+        </div>
+      </header>
+
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        {/* Profile Card */}
+        <div className="bg-white rounded-lg shadow-[0_4px_12px_rgba(0,0,0,0.08)] overflow-hidden">
+          {/* Banner */}
+          <div className="h-32 bg-[#e8e6df] relative"></div>
+
+          <div className="px-8 pb-8">
+            {/* Avatar */}
+            <div className="relative -mt-16 mb-4">
+              <div className="w-32 h-32 rounded-full border-4 border-white bg-white overflow-hidden shadow-sm">
                 <Image
                   src={user.profilePicture || "https://via.placeholder.com/150"}
                   alt="Profile"
-                  fill
-                  className="rounded-full object-cover"
+                  width={128}
+                  height={128}
+                  className="object-cover w-full h-full"
                   unoptimized
                 />
               </div>
-              <div className="absolute bottom-2 right-2 w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center border-4 border-slate-900 shadow-lg">
-                <FaLinkedinIn className="text-white text-sm" />
+            </div>
+
+            {/* Title */}
+            <div className="flex justify-between items-start">
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">
+                  {user.firstName} {user.lastName}
+                </h1>
+                <p className="text-gray-600 font-medium">
+                  Verified LinkedIn Professional
+                </p>
+                <p className="text-gray-500 text-sm mt-1">
+                  Authorized via AuthNode Integration
+                </p>
+              </div>
+              <div className="hidden sm:block">
+                <button className="px-4 py-1.5 bg-[#0a66c2] text-white font-medium rounded-full hover:bg-[#004182] transition-colors">
+                  Edit profile
+                </button>
               </div>
             </div>
-            <h2 className="text-3xl font-black tracking-tight mb-2 underline decoration-blue-500 decoration-4 underline-offset-8">
-              {user.firstName} {user.lastName}
-            </h2>
-            <p className="text-blue-200/80 font-medium uppercase tracking-widest text-xs italic">
-              Verified Professional
-            </p>
           </div>
         </div>
 
-        {/* Right Aspect - Details */}
-        <div className="md:w-3/5 p-8 md:p-14 bg-white flex flex-col justify-between">
-          <div>
-            <div className="flex justify-between items-start mb-10">
-              <h3 className="text-slate-900 text-3xl font-extrabold tracking-tight">
-                Profile Essence
-              </h3>
-              <div className="px-4 py-1.5 bg-green-50 text-green-700 rounded-full text-xs font-bold border border-green-100 flex items-center gap-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                Account Active
+        {/* Details Card */}
+        <div className="bg-white rounded-lg shadow-[0_4px_12px_rgba(0,0,0,0.08)] p-8 mt-6">
+          <h2 className="text-xl font-bold text-gray-900 mb-6">
+            Account Information
+          </h2>
+
+          <div className="space-y-6">
+            <div className="flex items-start gap-4">
+              <div className="w-10 h-10 bg-[#eff3f8] text-[#0a66c2] rounded flex items-center justify-center shrink-0">
+                <FaEnvelope className="text-lg" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-gray-900">
+                  Primary Email
+                </p>
+                <p className="text-gray-600">{user.email}</p>
               </div>
             </div>
 
-            <div className="space-y-6 mb-12">
-              <div className="flex items-center gap-6 p-6 rounded-2xl bg-slate-50 border border-slate-100 hover:border-blue-200 hover:bg-blue-50/30 transition-all group">
-                <div className="w-12 h-12 rounded-xl bg-white border border-slate-200 flex items-center justify-center shadow-sm group-hover:bg-blue-600 group-hover:border-blue-600 transition-colors">
-                  <FaEnvelope className="text-slate-400 group-hover:text-white transition-colors" />
-                </div>
-                <div>
-                  <p className="text-slate-400 text-xs font-bold uppercase tracking-wider mb-0.5">
-                    Primary Email
-                  </p>
-                  <p className="text-slate-900 font-semibold">{user.email}</p>
-                </div>
+            <div className="flex items-start gap-4 border-t border-gray-100 pt-6">
+              <div className="w-10 h-10 bg-[#eff3f8] text-[#0a66c2] rounded flex items-center justify-center shrink-0">
+                <FaIdBadge className="text-lg" />
               </div>
-
-              <div className="flex items-center gap-6 p-6 rounded-2xl bg-slate-50 border border-slate-100 hover:border-blue-200 hover:bg-blue-50/30 transition-all group">
-                <div className="w-12 h-12 rounded-xl bg-white border border-slate-200 flex items-center justify-center shadow-sm group-hover:bg-blue-600 group-hover:border-blue-600 transition-colors">
-                  <FaIdBadge className="text-slate-400 group-hover:text-white transition-colors" />
-                </div>
-                <div>
-                  <p className="text-slate-400 text-xs font-bold uppercase tracking-wider mb-0.5">
-                    LinkedIn ID
-                  </p>
-                  <p className="text-slate-900 font-mono text-sm break-all font-semibold">
-                    {user.linkedinId}
-                  </p>
-                </div>
+              <div>
+                <p className="text-sm font-semibold text-gray-900">
+                  LinkedIn ID
+                </p>
+                <p className="text-gray-600 font-mono text-sm break-all">
+                  {user.linkedinId}
+                </p>
               </div>
             </div>
-          </div>
-
-          <div className="flex flex-col sm:flex-row gap-4">
-            <button className="flex-1 bg-slate-900 text-white font-bold py-4 px-6 rounded-2xl hover:bg-slate-800 transition-all active:scale-95 shadow-xl shadow-slate-200 flex items-center justify-center gap-2">
-              Manage Connection
-            </button>
-            <button
-              onClick={handleLogout}
-              className="px-6 py-4 rounded-2xl border-2 border-slate-200 text-slate-500 font-bold hover:bg-slate-50 hover:text-red-500 hover:border-red-200 transition-all active:scale-95 flex items-center justify-center gap-2"
-            >
-              <FaSignOutAlt />
-              Logout
-            </button>
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

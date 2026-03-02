@@ -2,6 +2,7 @@
 
 import React from "react";
 import { FaLinkedin } from "react-icons/fa";
+import Link from "next/link";
 
 const CLIENT_ID = "860cj7r5jnu43g";
 const REDIRECT_URI =
@@ -21,55 +22,43 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#0a192f] p-6 font-sans">
-      {/* Abstract Background */}
-      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-600/10 rounded-full blur-[120px]"></div>
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-cyan-600/10 rounded-full blur-[120px]"></div>
-      </div>
-
-      <div className="relative z-10 w-full max-w-md bg-white/5 backdrop-blur-2xl rounded-[2.5rem] border border-white/10 shadow-2xl p-10 lg:p-12 transform transition-all duration-500 hover:shadow-blue-500/5">
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-blue-600 to-blue-400 rounded-3xl mb-8 shadow-xl shadow-blue-500/40 transform -rotate-3 hover:rotate-0 transition-transform duration-300">
-            <FaLinkedin className="text-white text-5xl" />
-          </div>
-          <h1 className="text-4xl font-extrabold text-white tracking-tight mb-4">
-            Professional Login
-          </h1>
-          <p className="text-slate-400 font-medium text-lg leading-relaxed">
-            Connect with LinkedIn to access your personalized dashboard.
-          </p>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-[#f3f2ef] p-6 font-sans">
+      <div className="w-full max-w-sm mb-6 flex justify-center text-center items-center gap-2">
+        <div className="w-8 h-8 bg-[#0a66c2] rounded flex items-center justify-center">
+          <FaLinkedin className="text-white text-lg" />
         </div>
+        <span className="font-bold text-2xl tracking-tight text-gray-900">
+          AuthNode
+        </span>
+      </div>
+      <div className="w-full max-w-sm bg-white rounded-lg shadow-[0_4px_12px_rgba(0,0,0,0.08)] p-8">
+        <h1 className="text-2xl font-bold text-gray-900 mb-1">Sign in</h1>
+        <p className="text-gray-600 mb-8 text-sm">
+          Stay updated on your professional world.
+        </p>
 
         <button
           onClick={handleLogin}
-          className="group relative w-full flex items-center justify-center gap-4 bg-white text-blue-900 font-bold py-5 px-8 rounded-2xl shadow-xl hover:bg-slate-50 transition-all duration-300 active:scale-[0.98] overflow-hidden"
+          className="w-full border border-gray-400 text-gray-700 bg-white font-medium py-3 px-4 rounded-full hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
         >
-          <div className="absolute inset-0 bg-blue-50 transform translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
-          <div className="relative flex items-center gap-4">
-            <FaLinkedin className="text-2xl text-blue-600" />
-            <span className="text-lg">Sign in with LinkedIn</span>
-          </div>
+          <FaLinkedin className="text-[#0a66c2] text-xl" />
+          Sign in with LinkedIn
         </button>
 
-        <div className="mt-12 flex items-center gap-5">
-          <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
-          <span className="text-white/20 text-[10px] font-black uppercase tracking-[0.2em]">
-            OAuth 2.0 Secure
-          </span>
-          <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
+        <div className="mt-8 text-center">
+          <p className="text-xs text-gray-500 max-w-[250px] mx-auto">
+            By clicking Sign in, you agree to AuthNode&apos;s User Agreement,
+            Privacy Policy, and Cookie Policy.
+          </p>
         </div>
+      </div>
 
-        <p className="mt-10 text-center text-slate-500 text-sm font-medium">
-          By continuing, you agree to our{" "}
-          <span className="text-blue-400 hover:text-blue-300 cursor-pointer underline-offset-4 hover:underline transition-colors">
-            Terms of Service
-          </span>{" "}
-          and{" "}
-          <span className="text-blue-400 hover:text-blue-300 cursor-pointer underline-offset-4 hover:underline transition-colors">
-            Privacy Policy
-          </span>
-          .
+      <div className="mt-8">
+        <p className="text-sm text-gray-600">
+          New to AuthNode?{" "}
+          <Link href="/" className="text-[#0a66c2] hover:underline font-medium">
+            Join now
+          </Link>
         </p>
       </div>
     </div>
